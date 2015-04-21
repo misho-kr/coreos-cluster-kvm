@@ -1,0 +1,32 @@
+---
+# Create Virtual Machines
+
+- template: src=vm.xml.j2
+            dest="{{ cloud_init_dir }}/vm-{{ item }}.xml"
+  with_sequence: count={{ vm_count }}
+  sudo: yes
+
+- name: define virtual machines
+  virt: name="coreos-{{ item }}"
+        command=define
+        xml="{{ lookup('template', '../templates/vm.xml.j2') }}"
+        uri=qemu:///system
+  with_sequence: count={{ vm_count }}
+
+- name: create virtual machines
+  virt: name="coreos-{{ item }}"
+        command=create 
+        state=running
+  with_sequence: count={{ vm_count }}
+  register: new_vm
+
+# Pause for N seconds to create and boot up all vms. Realistically, it may
+# (and probably will) take longer to boot up the virtual machines the first
+# time, but the shutdown task next will retry several times with pauses in 
+# between
+- pause: seconds={{ vm_create_pause }}
+
+- name: query status of virtual machines
+  virt: name="coreos-{{ item }}"
+        command=status
+  with_sequence: count={{ vm_count }}

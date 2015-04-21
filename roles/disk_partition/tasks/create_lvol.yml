@@ -1,0 +1,37 @@
+---
+# Create LVM-backed storage for VM images
+
+- name: create logical volume group (optional)
+  lvg: state=present
+       vg="{{ vg_name }}"
+       pesize="{{ vg_pe_size }}"
+       pvs="{{ vg_device }}"
+  when: vg_device is defined
+
+# - debug: msg="Now extracting image => {{ remote_vm_image_dir }}/{{ vm_image_name_compressed }}"
+
+- name: extract vm image
+  command: bunzip2  -f "{{ remote_vm_image_dir }}/{{ vm_image_name_compressed }}"
+
+# - debug: msg="Just extracted image => {{ remote_vm_image_dir }}/{{ vm_image_name }}"
+
+- name: query vm image size
+  command: qemu-img info --output=json "{{ remote_vm_image_dir }}/{{ vm_image_name }}"
+  register: vm_image_info_string
+
+- set_fact:
+    vm_image_info: "{{ vm_image_info_string.stdout | make_dict }}"
+
+- debug: msg="VM image size => {{ vm_image_info['virtual-size'] }}"
+
+- name: create logical volumes
+  lvol: vg="{{ vg_name }}" lv="HDD-CoreOS-VM{{ item }}"
+        size="{{ vm_image_info['virtual-size'] }}B"
+        state=present
+  with_sequence: vm_count
+
+- name: copy vm image to logical volumes
+  command: dd if="{{ remote_vm_image_dir }}/{{ vm_image_name }}"
+              of="{{ vg_dev_dir }}/HDD-CoreOS-VM{{ item }}"
+              bs=1M
+  with_sequence: vm_count

@@ -1,0 +1,32 @@
+---
+# Create local filesystem-backed storage for VM images
+
+- name: create directory to allocate and store vm images
+  file: name={{ vm_image_storage_fs_dir }} state=directory
+
+- name: set proper SELinux type for the vm image directory
+  file: name={{ vm_image_storage_fs_dir }} setype="virt_image_t"
+  when: ansible_selinux is defined
+
+# - debug: msg="Now extracting image => {{ remote_vm_image_dir }}/{{ vm_image_name_compressed }}"
+
+- name: copy compressed vm image to vm image directory
+  command: cp "{{ remote_vm_image_dir }}/{{ vm_image_name_compressed }}" {{ vm_image_storage_fs_dir }}
+
+# - name: extract vm image
+#   unarchive: src="{{ remote_vm_image_dir }}/{{ vm_image_name_compressed }}"
+#              dest={{ vm_image_storage_fs_dir }}
+
+- name: extract vm image
+  command: bunzip2  -f "{{ vm_image_storage_fs_dir }}/{{ vm_image_name_compressed }}"
+
+- debug: msg="Just extracted image => {{ vm_image_storage_fs_dir }}/{{ vm_image_name }}"
+
+- name: create first vm image
+  command: mv "{{ vm_image_storage_fs_dir }}/{{ vm_image_name }}" "{{ vm_image_storage_fs_dir }}/{{ vm_image_name_prefix }}-1.img"
+
+- name: create remaining vm images
+  command: cp "{{ vm_image_storage_fs_dir }}/{{ vm_image_name_prefix }}-1.img"
+              "{{ vm_image_storage_fs_dir }}/{{ vm_image_name_prefix }}-{{ item }}.img"
+  when: vm_count > 1
+  with_sequence: start=2 end={{ vm_count }}

@@ -1,0 +1,14 @@
+---
+# Upload vm image to provisionging host
+
+# - debug: msg=" VM IMAGE == {{ vm_image_name_compressed }}"
+
+- name: remove old vm image directory, if exists
+  file: name={{ remote_vm_image_dir }} state=absent
+
+- name: create vm image directory
+  file: name={{ remote_vm_image_dir }} state=directory
+
+- name: upload the vm image to the provisioning host
+  copy: src="{{ local_vm_image_dir }}/{{ vm_image_name_compressed }}"
+        dest={{ remote_vm_image_dir }}

@@ -1,0 +1,26 @@
+---
+# Create cloud-init files for all VMs
+
+# - debug: msg="vm_count={{ vm_count }}"
+# - debug: msg="host_indices={{ host_indices }}"
+
+- name: remove old directories for cloud-init files
+  file: name="{{ cloud_init_dir }}/configdrive-vm-{{ item }}"
+        state=absent
+  with_sequence: count={{ vm_count }}
+
+- name: create directory for cloud-init files
+  file: name="{{ cloud_init_dir }}/configdrive-vm-{{ item }}/openstack/latest"
+        state=directory
+  with_sequence: count={{ vm_count }}
+  register: hosts_indexes
+
+- template: src="{{ cloud_init_profile }}.j2"
+            dest="{{ cloud_init_dir }}/configdrive-vm-{{ item }}/openstack/latest/user_data"
+  with_sequence: count={{ vm_count }}
+
+- name: set SELinux attributes to cloud-init directory
+  file: name="{{ cloud_init_dir }}/configdrive-vm-{{ item }}"
+        setype="svirt_image_t" recurse=yes
+  with_sequence: count={{ vm_count }}
+  when: ansible_selinux.status == "enabled" and ansible_selinux.mode == "enforcing"

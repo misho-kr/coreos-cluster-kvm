@@ -1,0 +1,25 @@
+---
+
+home_dir:                 "{{ lookup('env', 'HOME') }}"
+
+vms_by_count:             True
+vm_count:                 3
+
+# not implemented yet
+vms_by_name:              False
+
+local_vm_image_dir:       "{{ playbook_dir }}/vm_image.dir"
+
+vm_image_storage_fs_dir:  "/var/lib/libvirt/images/coreos"
+cloud_init_dir:           "{{ vm_image_storage_fs_dir }}"
+
+vm_image_name_prefix:     "vm-coreos"
+
+vm_create_pause:          15      # seconds
+vm_startup_pause:         10      # seconds
+
+# can not use variables with do-until conditional (roll my eyes)
+# vm_cmd_retries:           3
+# vm_cmd_delay:             1
+
+vm_shutdown_timeout:      30      # seconds

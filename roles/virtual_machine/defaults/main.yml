@@ -1,0 +1,9 @@
+---
+
+cloud_init_dir:     "{{ vm_image_storage_fs_dir }}"
+vm_image_dir:       "{{ vm_image_storage_fs_dir }}"
+
+vm_memory:          524288
+vm_cpu_count:       1
+
+vm_network_name:    "VM_net_122"

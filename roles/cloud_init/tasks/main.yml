@@ -1,0 +1,19 @@
+---
+# Create cloud-init files for all VMs
+
+- include:    new_discovery_token.yml
+  when:       cloud_init_profile != "basic" and use_discovery_token | bool and discovery_token == ""
+
+- include:    create_cloud_init.yml
+  sudo:       yes
+  vars:
+    public_ssh_key:   "{{ lookup('file', home_dir + '/' + my_public_key_file ) }}"
+    discovery_url:    "{{ new_discovery_token.content | default( default_discovery_url + '/' + discovery_token ) }}"
+    host_indices:     "{{ vm_count | make_list(1) }}"
+
+#
+# This var "host_indices" is set incorrectly because "vm_count" is assigned
+# value from group_vars.yml instead of the CLI setting -e "vm_count=X". Why?
+#
+# host_indices="{{ vm_count | make_list(1) }}"
+#

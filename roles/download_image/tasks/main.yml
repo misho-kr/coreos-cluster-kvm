@@ -1,0 +1,9 @@
+---
+# Download CoreOS vm image, if the conditions are right
+
+- name: check if virtual machine image was already downloaded
+  stat: path="{{ local_vm_image_dir }}/{{ vm_image_name }}"
+  register: is_vm_image_downloaded
+
+- include: download.yml
+  when: not is_vm_image_downloaded.stat.exists or force_download | bool

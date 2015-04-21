@@ -1,0 +1,40 @@
+---
+# ----------------------------------------------------------
+#                Destroy cluster of CoreOS VM
+# ----------------------------------------------------------
+
+- hosts: provision_host
+
+  pre_tasks:
+
+    - name: get list of all virtual machines
+      virt: command=list_vms
+      register: virt_vms
+
+  vars:
+
+    coreos_vms:         '{{ virt_vms.list_vms | vm_by_name("coreos-*") }}'
+    num_of_coreos_vms:  '{{ coreos_vms | list_len | int }}'
+
+  tasks:
+
+    - debug: msg="will destroy ({{ num_of_coreos_vms }}) CoreOS virtual machine(s) => {{ coreos_vms | sort | join(', ') }}"
+
+    - name: destroy coreos virtual machines
+      virt: name="{{ item }}"
+            command=undefine
+      with_items: coreos_vms
+
+    - name: shutdown (unconditional) coreos virtual machines
+      virt: name="{{ item }}"
+            command=shutdown
+      with_items: coreos_vms
+
+#    - include: tasks/destroy.yml  vms={{ coreos_vms }}
+#    - include: tasks/shutdown_unconditional.yml vms={{ coreos_vms }}
+    - include: tasks/cleanup.yml
+      sudo: yes
+
+# ----------------------------------------------------------
+# eof
+#

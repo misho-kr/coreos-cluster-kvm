@@ -1,0 +1,8 @@
+---
+# Start
+
+- name: start coreos virtual machines
+  virt: name="{{ item.key }}"
+        command=start
+#  when: item.value.state != "running"
+  with_dict: vms

@@ -1,0 +1,36 @@
+#jinja2: lstrip_blocks: True
+#cloud-config
+
+ssh_authorized_keys:
+ - {{ public_ssh_key }}
+
+hostname:   coreos-{{ item }}
+
+coreos:
+
+  units:
+    - name: etcd.service
+      command: start
+    - name: fleet.service
+      command: start
+
+  etcd:
+    verbose: true
+    name: coreos-{{ item }}
+
+    {% if use_discovery_token == true %}
+    # generate a new token for each unique cluster from https://discovery.etcd.io/new
+    discovery: {{ discovery_url }}
+    {% else %}
+      {% if item|int != 1 %}
+    peers: "{% for host_index in vm_count | make_list(1) %}
+             {% if host_index|int != item|int %}
+coreos-{{ host_index }}:7001,
+             {%- endif %}
+           {% endfor %}"
+      {%- endif %}
+    {% endif %}
+
+    # multi-region and multi-cloud deployments need to use $public_ipv4
+    addr: coreos-{{ item }}:4001
+    peer-addr: coreos-{{ item }}:7001

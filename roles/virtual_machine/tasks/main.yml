@@ -1,0 +1,13 @@
+---
+# Create Virtual Machines
+#
+# ref: http://docs.ansible.com/virt_module.html
+#
+
+- include:    create_vms.yml
+
+################################################################
+#       This task is obsolete and will be removed
+################################################################
+#
+# - include:    restart_vms.yml

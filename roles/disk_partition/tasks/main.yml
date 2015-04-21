@@ -1,0 +1,14 @@
+---
+# Create disk partitions for the virtual machines
+
+- include:    upload.yml
+
+# filesystem-backed storage for vm images
+- include:    create_fs.yml
+  sudo: yes
+  when: vg_name == ""
+
+# LVM-backed storage for vm images
+- include:    create_lvol.yml
+  sudo: yes
+  when: vg_name != ""

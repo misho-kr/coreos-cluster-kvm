@@ -1,0 +1,4 @@
+---
+
+- name: create directory for virtual machine image
+  file: name={{ local_vm_image_dir }} state=directory

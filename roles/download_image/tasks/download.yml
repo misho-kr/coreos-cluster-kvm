@@ -1,0 +1,26 @@
+---
+# Download CoreOS vm image
+
+- name: remove old download directory, if exists
+  file: name={{ download_dir }} state=absent
+
+- name: create download directory
+  file: name={{ download_dir }} state=directory
+
+- name: download virtual machine image
+  get_url: dest={{ download_dir }} url="{{ vm_image_url }}/{{ vm_image_name }}"
+
+- name: bring the vm image to local host
+  fetch: src="{{ download_dir }}/{{ vm_image_name }}"
+         dest="{{ local_vm_image_dir }}/"
+         flat=yes
+
+- template: src=vm_image_name.j2 dest={{ download_dir }}/vm_image_name.txt
+
+- name: announce the vm image name to local host
+  fetch: src="{{ download_dir }}/vm_image_name.txt"
+         dest="{{ local_vm_image_dir }}/"
+         flat=yes
+
+- name: clean up download directory
+  file: name={{ download_dir }} state=absent

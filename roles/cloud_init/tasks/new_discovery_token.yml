@@ -1,0 +1,10 @@
+---
+# Obtain new discovery token
+
+- name: Request new discovery token
+  uri: url={{ request_discovery_url }}
+       method=GET
+       return_content=yes
+  register: new_discovery_token
+
+- debug: msg="New discovery token >> {{ new_discovery_token.content }}"

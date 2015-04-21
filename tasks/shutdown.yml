@@ -1,0 +1,88 @@
+---
+# Shutdown
+# ---------------------------------------------------------------------
+# Yep, it is very primitive to manually roll out loops ... but all
+# attempts to use do-until conditional with "include" statement failed
+# miserably and I am running out of pationce ...
+# ---------------------------------------------------------------------
+
+- name: make vm-state helper script available
+  copy: src=files/vm_state_wait.sh dest=/tmp/
+        mode="u+x" force=yes
+
+# ------------------------------------------------------------
+#  Loop 1
+# ------------------------------------------------------------
+
+- set_fact: timeout='{{ (vm_shutdown_timeout / num_of_coreos_vms | int) | int }}'
+
+- name: shutdown coreos virtual machines
+  virt: name="{{ item.key }}"
+        command=shutdown
+  when: item.value.state != "shutdown"
+  with_dict: vms
+
+- name: wait for virtual machines to shutdown
+  command: /tmp/vm_state_wait.sh -s shut -t {{ timeout }} {{ item.key }}
+  register: shutdown_result
+  with_dict: vms
+
+# - debug: msg="result = {{ shutdown_result }}"
+
+- set_fact:
+    vms_are_shutdown:   "{{ shutdown_result | vms_in_state }}"
+
+# - debug: msg="all vms are in shutdown state => {{ vms_are_shutdown }}"
+
+# ------------------------------------------------------------
+#  Loop 2
+# ------------------------------------------------------------
+
+- set_fact: timeout="{{ ( 2 * vm_shutdown_timeout / num_of_coreos_vms | int) | int }}"
+
+- name: shutdown coreos virtual machines
+  virt: name="{{ item.key }}"
+        command=shutdown
+  when: not vms_are_shutdown | bool and item.value.state != "shutdown"
+  with_dict: vms
+
+- name: wait for virtual machines to shutdown
+  command: /tmp/vm_state_wait.sh -s shut -t {{ timeout }} {{ item.key }}
+  register: shutdown_result
+  when: not vms_are_shutdown | bool
+  with_dict: vms
+
+- set_fact:
+    vms_are_shutdown:   "{{ shutdown_result | vms_in_state }}"
+
+# ------------------------------------------------------------
+#  Loop 3
+# ------------------------------------------------------------
+
+- set_fact: timeout="{{ ( 3 * vm_shutdown_timeout / num_of_coreos_vms | int) | int }}"
+
+- name: shutdown coreos virtual machines
+  virt: name="{{ item.key }}"
+        command=shutdown
+  when: not vms_are_shutdown | bool and item.value.state != "shutdown"
+  with_dict: vms
+
+- name: wait for virtual machines to shutdown
+  command: /tmp/vm_state_wait.sh -s shut -t {{ timeout }} {{ item.key }}
+  register: shutdown_result
+  when: not vms_are_shutdown | bool
+  with_dict: vms
+
+- set_fact:
+    vms_are_shutdown:   "{{ shutdown_result | vms_in_state }}"
+
+# ------------------------------------------------------------
+
+# keep the helper script for the next round
+- name: remove helper script
+  file: name=/tmp/vm_state_wait.sh state=absent
+  when: vms_are_shutdown
+
+- name: set operation status to fail if any virtual machine is not shutdown
+  fail: msg="Failed to shutdown some (or all) virtual machines"
+  when: not vms_are_shutdown | bool

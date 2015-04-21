@@ -1,0 +1,85 @@
+---
+# ----------------------------------------------------------
+#                Create cluster of CoreOS VMs
+# ----------------------------------------------------------
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+
+    - assert:   { that: "vm_count > 1" }
+
+    - include:  tasks/local_setup.yml
+
+# ----------------------------------------------------------
+#  1. Download VM image
+# ----------------------------------------------------------
+
+- hosts: download_host
+  roles:
+
+    - { role: download_image, tags: download }
+
+# ----------------------------------------------------------
+#  2. Create VMs
+# ----------------------------------------------------------
+
+- hosts: provision_host
+
+  pre_tasks:
+
+    - name: discover vm image name
+      command: cat "{{ local_vm_image_dir }}"/vm_image_name.txt
+      tags: disks
+      register: saved_vm_image_name
+
+  vars:
+
+    vm_image_name_compressed:   "{{ saved_vm_image_name.stdout }}"
+    vm_image_name:              '{{ vm_image_name_compressed | regex_replace(".bz2$", "") }}'
+
+  roles:
+
+    - { role: disk_partition,     tags: disks }
+    - { role: cloud_init,         tags: init }
+    - { role: virtual_machine,    tags: vms }
+
+  tasks:
+
+# ----------------------------------------------------------
+#  3. Restart VMs
+# ----------------------------------------------------------
+
+    - name: get info of all virtual machines
+      virt: command=info
+      tags: vms
+      register: virt_info
+
+    - name: get list of all virtual machines
+      virt: command=list_vms
+      tags: vms
+      register: virt_vms
+
+  vars:
+
+    coreos_vms:         '{{ virt_vms.list_vms | vm_by_name("coreos-*") }}'
+    num_of_coreos_vms:  '{{ coreos_vms | list_len | int }}'
+    coreos_vm_info:     '{{ virt_info | vm_info_by_name("coreos-*") }}'
+
+  post_tasks:
+
+    - include: tasks/shutdown.yml vms={{ coreos_vm_info }}
+      tags: vms
+
+    - include: tasks/start.yml vms={{ coreos_vm_info }}
+      tags: vms
+
+    # Pause for N seconds to start up all vms. Note that this pause is likely
+    # to insufficient, but at least it gives few seconds to the virtual
+    # machines to get things going
+    - pause: seconds={{ vm_startup_pause }}
+      tags: vms
+
+# ----------------------------------------------------------
+# eof
+#

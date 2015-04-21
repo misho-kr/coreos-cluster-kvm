@@ -1,0 +1,20 @@
+# -----------------------------------------------------------------------
+#                           Cluster of CoreOS 
+# -----------------------------------------------------------------------
+
+[all:children]
+download_host
+provision_host
+coreos_servers
+
+[download_host]
+download_host		  ansible_connection=local
+
+[provision_host]
+provision_host		ansible_connection=local
+
+[coreos_servers]
+
+# -----------------------------------------------------------------------
+# eof
+#

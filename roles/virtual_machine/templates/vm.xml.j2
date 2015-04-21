@@ -1,0 +1,65 @@
+<domain type='kvm'>
+  <name>coreos-{{ item }}</name>
+  <memory unit='KiB'>{{ vm_memory }}</memory>
+  <currentMemory unit='KiB'>{{ vm_memory }}</currentMemory>
+  <vcpu placement='static'>{{ vm_cpu_count }}</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/qemu-kvm</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      {% if vg_name == "" %}
+      <source file='{{ vm_image_dir }}/{{ vm_image_name_prefix }}-{{ item }}.img'/>
+      {%else %}
+      <source file='{{ vg_dev_dir }}/HDD-CoreOS-VM{{ item }}'/>
+      {%- endif %}
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <controller type='usb' index='0'>
+    </controller>
+    <filesystem type='mount' accessmode='squash'>
+      <source dir='{{ cloud_init_dir }}/configdrive-vm-{{ item }}/'/>
+      <target dir='config-2'/>
+      <readonly/>
+    </filesystem>
+    <interface type='network'>
+<!--
+      <mac address='ab:cd:ef:gh:ij'/>
+      <source dev='eth0' mode='bridge'/>
+-->
+      <source network='{{ vm_network_name }}'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <input type='tablet' bus='usb'/>
+    <input type='mouse' bus='ps2'/>
+<!--
+    <graphics type='vnc' port='-1' autoport='yes'/>
+-->
+    <graphics type='spice' autoport='yes'/>
+    <sound model='ich6'>
+    </sound>
+    <video>
+      <model type='cirrus' vram='9216' heads='1'/>
+    </video>
+    <memballoon model='virtio'>
+    </memballoon>
+  </devices>
+</domain>

@@ -1,0 +1,32 @@
+---
+# Restart Virtual Machines
+
+################################################################
+#       This task is obsolete and will be removed
+################################################################
+
+- name: restart virtual machines, part 1 (shutdown)
+  virt: name="coreos-{{ item }}"
+        state=shutdown
+  with_sequence: count={{ vm_count }}
+
+# Pause for N seconds to shutdown all vms
+- pause: seconds={{ vm_shutdown_pause }}
+
+- name: query status of virtual machines (after shutdown)
+  virt: name="coreos-{{ item }}"
+        command=status
+  with_sequence: count={{ vm_count }}
+
+- name: restart virtual machines, part 2 (start again)
+  virt: name="coreos-{{ item }}"
+        state=running
+  with_sequence: count={{ vm_count }}
+
+# Pause for N seconds to start up all vms
+- pause: seconds={{ vm_startup_pause }}
+
+- name: query status of virtual machines (after restart)
+  virt: name="coreos-{{ item }}"
+        command=status
+  with_sequence: count={{ vm_count }}

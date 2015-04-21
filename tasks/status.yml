@@ -1,0 +1,10 @@
+---
+# Status
+
+- debug: msg="({{ num_of_coreos_vms }}) CoreOS virtual machine(s) => {{ coreos_vms | sort | join(', ') }}"
+
+- name: get status of coreos virtual machines
+  virt: command=status
+        name={{ item }}
+  with_items: vms
+  register: virt_status

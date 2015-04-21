@@ -1,0 +1,11 @@
+---
+
+download_dir:           "{{ playbook_dir }}/download.dir"
+
+# vm_image_url:           "https://coreos.com/docs/running-coreos/platforms/libvirt"
+# vm_image_name:          "index.html"
+
+vm_image_url:           http://stable.release.core-os.net/amd64-usr/current
+vm_image_name:          coreos_production_qemu_image.img.bz2
+
+force_download:         false

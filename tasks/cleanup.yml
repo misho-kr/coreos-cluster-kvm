@@ -1,0 +1,36 @@
+---
+# Cleanup
+
+# ---------------------------------------------------------------------
+#         filesystem-based storage for virtual machine images
+# ---------------------------------------------------------------------
+
+- name: remove image files after all virtual machines are destroyed
+  file: state=absent
+        name="{{ vm_image_storage_fs_dir }}/{{ vm_image_name_prefix }}-{{ item }}.img"
+  when: vg_name is not defined or vg_name == "none"
+  with_sequence: vm_count
+  retries: 3
+  delay: 16
+
+- name: remove old directory for cloud-init files
+  file: state=absent
+        name="{{ cloud_init_dir }}/configdrive-vm-{{ item }}"
+  with_sequence: count={{ vm_count }}
+
+- name: remove directory to allocate and store vm images
+  file: state=absent
+        name={{ vm_image_storage_fs_dir }}
+  when: vg_name is not defined or vg_name == "none"
+
+# ---------------------------------------------------------------------
+#           LVM-based storage for virtual machine images
+# ---------------------------------------------------------------------
+
+- name: remove logical volumes after all virtual machines are destroyed
+  lvol: state=absent force=yes
+        vg="{{ vg_name }}" lv="HDD-CoreOS-VM{{ item }}"
+  when: vg_name is defined and vg_name != ""
+  with_sequence: vm_count
+  retries: 3
+  delay: 16
