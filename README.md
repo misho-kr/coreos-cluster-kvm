@@ -21,7 +21,7 @@ Creating the cluster is as easy as choosing the desired number of machines in th
 $ git clone https://github.com/misho-kr/coreos-cluster-kvm
 Cloning into 'coreos-cluster-kvm'...
 $ cd coreos-cluster-kvm
-$ ansible-playbook create.yml -i hosts
+$ ansible-playbook create.yml -i hosts --ask-become-pass
 ```
 
 Obviously you need to have [Ansible](http://docs.ansible.com) on your machine in order to run the playbook. Follow the [instuctions in the Ansible documentation](http://docs.ansible.com/intro_installation.html) to install it from distro repositories, from source or with pip.
