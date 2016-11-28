@@ -18,9 +18,9 @@ This playbook was created for two reasons:
 Creating the cluster is as easy as choosing the desired number of machines in the cluster and running the playbook. It will download stable CoreOS image from the official site, create N (default 3) KVM virtual machines and boot up the cluster. 
 
 ```bash
-$ git clone https://github.com/misho-kr/scripts-and-tools
-Cloning into 'scripts-and-tools'...
-$ cd scripts-and-tools/ansible/create-coreos-cluster
+$ git clone https://github.com/misho-kr/coreos-cluster-kvm
+Cloning into 'coreos-cluster-kvm'...
+$ cd coreos-cluster-kvm
 $ ansible-playbook create.yml -i hosts
 ```
 
